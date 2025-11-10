@@ -25,15 +25,17 @@ def load_models(
     encoder_path = encoder_path or os.getenv("MODEL_ENCODER_PATH", "encoder.pkl")
 
     # Ensure the pickled class references are resolvable
-    # Some pickles may reference 'Models.Classifier' or just 'Classifier'
-    try:
-        from Models import Classifier as _classifier_module
-        # Map both names to support different pickle origins
-        sys.modules.setdefault("Models.Classifier", _classifier_module)
-        sys.modules.setdefault("Classifier", _classifier_module)
-    except Exception:
-        # If import fails, continue; pickle may still load if not needed
-        pass
+    # Fix: Redirect old 'Classifier' module reference to 'Models.Classifier'
+    # 1. Import the class from its current location (this loads the module into sys.modules)
+    from Models.Classifier import AdaptiveWeightedFusion
+
+    # 2. Crucial Fix: Intercept the pickle import lookup.
+    # This tells Python that whenever anything asks for the OLD module name ('Classifier'),
+    # it should use the module we just imported ('Models.Classifier').
+    if 'Classifier' not in sys.modules:
+        # Use the actual module object associated with the current import path
+        # If the original module name was just 'Classifier', this alias allows the load.
+        sys.modules['Classifier'] = sys.modules['Models.Classifier']
 
     with open(model_path, "rb") as f:
         _awf_model = pickle.load(f)

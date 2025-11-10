@@ -8,6 +8,11 @@ from sklearn.metrics import accuracy_score
 from imblearn.over_sampling import SMOTE
 import numpy as np
 import pickle
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env if present
+load_dotenv()
 
 class AdaptiveWeightedFusion:
     def __init__(self):
@@ -63,7 +68,8 @@ class AdaptiveWeightedFusion:
         return predicted_labels_str
 
 # Load the transaction dataset
-data = pd.read_csv(r"C:\Users\shaukat\Desktop\Major\data\Firsttest.csv")  # Replace with the correct file path
+# Use environment variable for path; default to repository-relative path
+data = pd.read_csv(os.getenv("DATA_FIRSTTEST_CSV", "data/Firsttest.csv"))
 
 # Select features and target variable
 X = data[['Amount', 'Time', 'Domain']]
